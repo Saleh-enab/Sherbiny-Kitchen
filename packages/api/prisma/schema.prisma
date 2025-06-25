@@ -1,0 +1,60 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Measure {
+  PIECE
+  PACKET
+  GRAM
+  KILOGRAM
+  SPOON
+  CUP
+}
+
+model User {
+  id                      Int       @id @unique @default(autoincrement())
+  name                    String
+  email                   String    @unique
+  password                String
+  resetPasswordToken      String?
+  resetPasswordExpiration DateTime?
+  verified                Boolean   @default(false)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  recipes                 Recipe[]
+}
+
+model Ingredient {
+  slug               String               @id @unique
+  name               String               @unique
+  RecipeToIngredient RecipeToIngredient[]
+}
+
+model Recipe {
+  slug               String               @id @unique
+  name               String               @unique
+  countery           String
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  User               User?                @relation(fields: [userId], references: [id])
+  userId             Int?
+  RecipeToIngredient RecipeToIngredient[]
+}
+
+model RecipeToIngredient {
+  recipe         Recipe     @relation(fields: [recipeSlug], references: [slug])
+  recipeSlug     String
+  Ingredient     Ingredient @relation(fields: [ingredientSlug], references: [slug])
+  ingredientSlug String
+  measure        Measure
+  quantity       Int
+
+  @@id([recipeSlug, ingredientSlug])
+}
