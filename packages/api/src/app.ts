@@ -5,6 +5,7 @@ import helmet from "helmet";
 import { rateLimit } from 'express-rate-limit';
 import { errorHandler } from "./utils/errorHandler.js";
 import { errors } from "./config/errors.js";
+import { authRouter } from "./modules/auth/auth.route.js";
 
 export const createServer = (): Express => {
     const app = express();
@@ -41,6 +42,8 @@ export const createServer = (): Express => {
         app.get("/status", (_, res) => {
             res.json({ ok: true });
         });
+
+        app.use('/api/v1', authRouter)
     }
 
     const setupErrorHandlers = () => {
