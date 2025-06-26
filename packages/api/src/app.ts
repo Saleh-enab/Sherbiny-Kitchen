@@ -6,6 +6,7 @@ import { rateLimit } from 'express-rate-limit';
 import { errorHandler } from "./utils/errorHandler.js";
 import { errors } from "./config/errors.js";
 import { authRouter } from "./modules/auth/auth.route.js";
+import cookieParser from 'cookie-parser';
 
 export const createServer = (): Express => {
     const app = express();
@@ -25,7 +26,9 @@ export const createServer = (): Express => {
             .use(express.json())
             .use(cors())
             .use(helmet())
-            .use(limiter);
+            .use(limiter)
+            .use(cookieParser());
+
 
         setUpRoutes();
         setupErrorHandlers();
@@ -34,16 +37,11 @@ export const createServer = (): Express => {
 
 
     const setUpRoutes = () => {
-        app.get("/message/:name", (req, res) => {
-            const name = req.params.name;
-            res.json({ "Message": `Hello ${name}` })
-        })
-
         app.get("/status", (_, res) => {
             res.json({ ok: true });
         });
 
-        app.use('/api/v1/auth', authRouter)
+        app.use('/api/v1/auth', authRouter);
     }
 
     const setupErrorHandlers = () => {

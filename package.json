@@ -13,5 +13,12 @@
   "type": "module",
   "workspaces": [
     "packages/api"
-  ]
+  ],
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.9",
+    "@types/jsonwebtoken": "^9.0.10"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7"
+  }
 }
