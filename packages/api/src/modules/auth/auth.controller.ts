@@ -10,11 +10,12 @@ import { SignUpMiddleware } from "../../schemas/userRegisteration.js";
 import AppError from "../../models/appError.js";
 import { NewEmailTokenMiddleware } from "../../schemas/emailToken.js";
 import { LoginMiddleware } from "../../schemas/userLogin.js";
-import { createToken } from "../../utils/tokensHandlers.js";
+import { createToken, verifyToken } from "../../utils/tokensHandlers.js";
 import env from "../../env.js";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { ForgetPasswordMiddleware } from "../../schemas/forgetPasswordToken.js";
 import { ResetPasswordMiddleware } from "../../schemas/resetPassword.js";
+import { JwtPayload } from "jsonwebtoken";
 
 export const signUp: SignUpMiddleware = async (req, res, next) => {
     const { name, email, password } = req.body;
@@ -181,3 +182,40 @@ export const resetPassword: ResetPasswordMiddleware = async (req, res, next) => 
         message: "Password has been updated successfully"
     })
 };
+
+export const generateNewAccessToken = async (req: Request, res: Response, next: NextFunction) => {
+    const refreshToken = req.cookies.refreshToken
+    const authHeader = req.headers["authorization"]
+    const accessToken = authHeader?.split(" ")[1]
+
+    if (!accessToken) {
+        return next(AppError.custom(400, 998, "Access token is not provided"));
+    }
+    if (!refreshToken) {
+        return next(AppError.custom(400, 998, "Refresh token is not provided"));
+    }
+
+    const accessDecoded = verifyToken(accessToken, "accessToken")
+
+    if (!accessDecoded.verified && refreshToken) {
+        const refreshDecoded = verifyToken(refreshToken, "refreshToken")
+
+        if (!refreshDecoded.verified) {
+            return next(AppError.custom(403, 1015, refreshDecoded.error!));
+        }
+
+        const { id, email, role } = refreshDecoded.data as JwtPayload
+        const newAccessToken = createToken({ id, email, role }, "accessToken", { expiresIn: env.ACCESS_TOKEN_TTL })
+        res.setHeader("x-access-token", newAccessToken);
+        req.accessToken = newAccessToken
+        logger.info("New access token has been generated")
+
+        res.status(200).json({
+            message: "New access token has been generated"
+        })
+        return;
+    }
+    res.json({
+        message: "Access token still valid, try to logout first."
+    })
+}
