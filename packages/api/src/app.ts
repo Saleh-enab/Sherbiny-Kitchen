@@ -43,7 +43,7 @@ export const createServer = (): Express => {
             res.json({ ok: true });
         });
 
-        app.use('/api/v1', authRouter)
+        app.use('/api/v1/auth', authRouter)
     }
 
     const setupErrorHandlers = () => {
