@@ -1,6 +1,8 @@
 import { Router } from "express";
-import { signUp } from "./auth.controller.js";
+import { generateNewEmailToken, signUp, verifyEmail } from "./auth.controller.js";
 
 export const authRouter: Router = Router();
 
 authRouter.post('/register', signUp);
+authRouter.post('/verify-email', verifyEmail)
+authRouter.post('/new-email-token', generateNewEmailToken)
