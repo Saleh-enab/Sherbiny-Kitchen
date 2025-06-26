@@ -5,6 +5,7 @@ import { logger } from "../../utils/logger.js";
 import { sendMail } from "../../utils/mailSender.js";
 import crypto from 'crypto';
 import { hashPassword } from "../../utils/passwordHandler.js";
+import db from "../../db.js";
 
 export const signUp: SignUpMiddleware = async (req, res, next) => {
     const { name, email, password } = req.body;
@@ -16,17 +17,23 @@ export const signUp: SignUpMiddleware = async (req, res, next) => {
     const hashedPassword = await hashPassword(password);
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const hashedVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
-    const user = await createUser(name, email, hashedPassword);
 
-    await sendMail({
-        recipient: user.email,
-        userName: user.name,
-        verificationToken: hashedVerificationToken,
-        type: "emailVerification"
+    const result = await db.$transaction(async (tx) => {
+        const user = await createUser(tx, name, email, hashedPassword)
+
+        await sendMail({
+            recipient: user.email,
+            userName: user.name,
+            verificationToken: hashedVerificationToken,
+            type: "emailVerification"
+        })
+
+        return user;
     })
 
+
     res.status(201).json({
-        customerData: user
+        userData: result
     });
 
     logger.info("User has been registered successfully");
