@@ -1,5 +1,5 @@
 import { errors } from "../../config/errors.js";
-import { createUser, findUserByEmail, findUserByVerificationToken, updateEmailVerificationStatus, updateEmailVerificationToken } from "../../services/user.service.js";
+import { createUser, findUserByEmail, findUserByVerificationToken, upadteResetPasswordToken, updateEmailVerificationStatus, updateEmailVerificationToken, updatePassword } from "../../services/user.service.js";
 import { logger } from "../../utils/logger.js";
 import { sendMail } from "../../utils/mailSender.js";
 import crypto from 'crypto';
@@ -13,6 +13,8 @@ import { LoginMiddleware } from "../../schemas/userLogin.js";
 import { createToken } from "../../utils/tokensHandlers.js";
 import env from "../../env.js";
 import { Request, Response } from "express";
+import { ForgetPasswordMiddleware } from "../../schemas/forgetPasswordToken.js";
+import { ResetPasswordMiddleware } from "../../schemas/resetPassword.js";
 
 export const signUp: SignUpMiddleware = async (req, res, next) => {
     const { name, email, password } = req.body;
@@ -135,4 +137,47 @@ export const logout = (req: Request, res: Response) => {
     res.json({
         message: "User logged out successfully"
     });
-}
+};
+
+export const forgetPassword: ForgetPasswordMiddleware = async (req, res, next) => {
+    const { email } = req.body
+    const user = await findUserByEmail(email)
+    if (!user) {
+        return next(AppError.custom(400, 998, "User not found"));
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    await upadteResetPasswordToken(email, hashedToken)
+
+    const resetUrl = `http://localhost:3000/api/v1/auth/reset-password?token=${resetToken}&email=${email}`;
+    await sendMail({
+        recipient: user.email,
+        resetPasswordUrl: resetUrl,
+        userName: user.name,
+        type: "resetPassword"
+    })
+
+    res.json({
+        message: "Password reset link has been sent to your email"
+    })
+};
+
+export const resetPassword: ResetPasswordMiddleware = async (req, res, next) => {
+    const { passwordToken, email, newPassword } = req.body;
+    if (!passwordToken || !email || !newPassword) {
+        return next(AppError.custom(400, 998, "Email or Password token not provided"))
+    }
+    const hashedToken = crypto.createHash('sha256').update(passwordToken).digest('hex');
+    const newHashedPassword = await hashPassword(newPassword);
+
+    const updatedCustomer = await updatePassword(email, hashedToken, newHashedPassword)
+
+    if (updatedCustomer.count === 0) {
+        return next(AppError.custom(400, 998, "Invalid Email or Token"));
+    }
+    res.json({
+        message: "Password has been updated successfully"
+    })
+};

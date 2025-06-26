@@ -65,3 +65,39 @@ export const findUserByVerificationToken = async (token: string) => {
 
     return user;
 }
+
+export const updateEmailAccessToken = async (userEmail: string, newToken: string, newExipiration: Date) => {
+    await db.user.update({
+        where: { email: userEmail },
+        data: {
+            verificationToken: newToken,
+            verificationTokenExpiration: newExipiration
+        }
+    });
+}
+
+export const upadteResetPasswordToken = async (userEmail: string, resetToken: string) => {
+    await db.user.update({
+        where: { email: userEmail },
+        data: {
+            resetPasswordToken: resetToken,
+            resetPasswordExpiration: new Date(Date.now() + 10 * 60 * 1000)
+        }
+    })
+}
+
+export const updatePassword = async (userEmail: string, passwordToken: string, newPassword: string) => {
+    const updatedUser = await db.user.updateMany({
+        where: {
+            email: userEmail,
+            resetPasswordToken: passwordToken,
+            resetPasswordExpiration: { gt: new Date() },
+        },
+        data: {
+            password: newPassword,
+            resetPasswordExpiration: null,
+            resetPasswordToken: null,
+        },
+    });
+    return updatedUser;
+}
