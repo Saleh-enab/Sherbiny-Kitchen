@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { validate } from '../utils/validator.js';
 
-export const userSchema = z.object({
+export const userRegisterSchema = z.object({
     body: z.object({
         name: z.string(),
         email: z.string().email(),
@@ -14,5 +14,5 @@ export const userSchema = z.object({
     path: ["confirm"]
 })
 
-export const signUpValidator = validate(userSchema)
+export const signUpValidator = validate(userRegisterSchema)
 export type SignUpMiddleware = typeof signUpValidator
