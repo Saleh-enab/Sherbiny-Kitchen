@@ -2,3 +2,6 @@ node_modules
 .env
 dist
 /src/generated/prisma
+scripts
+seed
+Templates/promptTemplate.txt
