@@ -19,7 +19,8 @@ const envSchema = z.object({
     ACCESS_TOKEN_PRIVATE_KEY: z.string().startsWith("-----BEGIN RSA PRIVATE KEY-----"),
     REFRESH_TOKEN_PUBLIC_KEY: z.string().startsWith("-----BEGIN PUBLIC KEY-----"),
     REFRESH_TOKEN_PRIVATE_KEY: z.string().startsWith("-----BEGIN RSA PRIVATE KEY-----"),
-    GEMINI_API_KEY: z.string()
+    GEMINI_API_KEY: z.string(),
+    REDIS_URL: z.string().startsWith("rediss://")
 })
 
 const env = envSchema.parse(process.env);

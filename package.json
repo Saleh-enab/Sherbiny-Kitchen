@@ -19,6 +19,7 @@
     "@types/jsonwebtoken": "^9.0.10"
   },
   "dependencies": {
-    "cookie-parser": "^1.4.7"
+    "cookie-parser": "^1.4.7",
+    "ioredis": "^5.6.1"
   }
 }
