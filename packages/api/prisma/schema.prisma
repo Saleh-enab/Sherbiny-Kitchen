@@ -44,10 +44,12 @@ model Recipe {
   slug               String               @id @unique
   name               String               @unique
   countery           String
+  steps              String[]
+  timeInMinutes      Int
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
-  User               User?                @relation(fields: [userId], references: [id])
-  userId             String?
+  User               User                 @relation(fields: [userId], references: [id])
+  userId             String
   RecipeToIngredient RecipeToIngredient[]
 }
 
