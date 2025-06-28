@@ -30,9 +30,9 @@ export const findUserByEmail = async (email: string) => {
     return user;
 }
 
-export const updateEmailVerificationStatus = async (userId: number) => {
+export const updateEmailVerificationStatus = async (email: string) => {
     await db.user.update({
-        where: { id: userId },
+        where: { email },
         data: {
             verified: true,
             verificationToken: null,
