@@ -30,7 +30,7 @@ export const signUp: SignUpMiddleware = async (req, res, next) => {
     const expiryDate = new Date(Date.now() + 10 * 60 * 1000);
 
     const result = await db.$transaction(async (tx) => {
-        const user = await createUser(tx, name, email, hashedPassword, hashedVerificationToken, expiryDate)
+        const user = await createUser(tx, name, email.toLowerCase(), hashedPassword, hashedVerificationToken, expiryDate)
 
         await sendMail({
             recipient: user.email,
