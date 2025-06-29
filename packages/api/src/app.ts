@@ -8,6 +8,7 @@ import { errors } from "./config/errors.js";
 import { authRouter } from "./modules/auth/auth.route.js";
 import cookieParser from 'cookie-parser';
 import { recipeRouter } from "./modules/recipe/recipe.route.js";
+import { ingredientRouter } from "./modules/ingredient/ingredient.route.js";
 
 export const createServer = (): Express => {
     const app = express();
@@ -44,6 +45,7 @@ export const createServer = (): Express => {
 
         app.use('/api/v1/auth', authRouter);
         app.use('/api/v1/recipe', recipeRouter);
+        app.use('/api/v1/ingredient', ingredientRouter);
     }
 
     const setupErrorHandlers = () => {
