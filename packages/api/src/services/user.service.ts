@@ -24,11 +24,11 @@ export const createUser = async (tx: Prisma.TransactionClient,
 export const findUserByEmail = async (email: string) => {
     const user = await db.user.findUnique({
         where: {
-            email
+            email: email.toLowerCase(),
         }
-    })
+    });
     return user;
-}
+};
 
 export const updateEmailVerificationStatus = async (email: string) => {
     await db.user.update({
