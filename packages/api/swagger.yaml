@@ -586,7 +586,7 @@ paths:
                           $ref: "#/components/schemas/Recipe"
                   - type: object
                     properties:
-                      nessage:
+                      message:
                         type: string
                         description: Message when no recipes found
               examples:
@@ -618,7 +618,7 @@ paths:
                 noRecipes:
                   summary: No recipes found
                   value:
-                    nessage: "No recipes found for this user"
+                    message: "No recipes found for this user"
         "401":
           description: Unauthorized
           content:
