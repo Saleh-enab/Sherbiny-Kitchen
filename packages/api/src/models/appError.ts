@@ -1,5 +1,6 @@
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { errors } from "../config/errors.js";
 
 class AppError extends Error {
     public readonly statusCode: number;
@@ -24,10 +25,7 @@ class AppError extends Error {
         if (err instanceof ZodError) {
             return this.fromZod(err);
         }
-        if (err instanceof Error) {
-            return this.fromError(err);
-        }
-        return this.fromError(new Error('Internal server error'));
+        return errors.unexpected;
     }
 
     static fromError(err: Error, statusCode: number = 500) {
