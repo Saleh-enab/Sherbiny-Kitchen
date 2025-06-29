@@ -43,7 +43,7 @@ model Ingredient {
 model Recipe {
   slug               String               @id @unique
   name               String               @unique
-  countery           String
+  country            String
   steps              String[]
   timeInMinutes      Int
   createdAt          DateTime             @default(now())
