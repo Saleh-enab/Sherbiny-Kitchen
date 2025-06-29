@@ -18,7 +18,8 @@ import { RequestHandler } from "express";
 
 export const generateRecipe: GenerateRecipeMiddleware = async (req, res, next) => {
 
-    let todayAttemps = await getTodayCachedRecipeCount();
+    const userId = req.user.id;
+    let todayAttemps = await getTodayCachedRecipeCount(userId);
 
     if (todayAttemps >= 5) {
         next(errors.maxAttemptsReached);
@@ -46,7 +47,7 @@ export const generateRecipe: GenerateRecipeMiddleware = async (req, res, next) =
 
     const recipeKey = slugify.default(finalResult.recipeName.toLowerCase(), { lower: true, replacement: '-', trim: true });
     console.log(recipeKey);
-    await setRecipe(recipeKey, finalResult);
+    await setRecipe(recipeKey, finalResult, userId);
 
     todayAttemps++;
     const remainingAttemps = 5 - todayAttemps
@@ -102,7 +103,7 @@ export const getAllRecipes: RequestHandler = async (req, res) => {
     const recipes = await findAllRecipes(req.user.id);
 
     if (recipes.length === 0) {
-        res.json({ nessage: "No recipes found for this user" });
+        res.json({ message: "No recipes found for this user" });
         return;
     }
 
