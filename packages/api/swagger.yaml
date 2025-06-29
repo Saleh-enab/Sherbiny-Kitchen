@@ -1,0 +1,978 @@
+openapi: 3.0.3
+info:
+  title: Sherbiny Kitchen API
+  description: |
+    A comprehensive API for recipe generation, management, and user authentication.
+
+    ## Features
+    - User authentication and authorization
+    - AI-powered recipe generation using Google Gemini
+    - Recipe management (save, retrieve, list)
+    - Ingredient management
+    - Email verification and password reset functionality
+
+    ## Authentication
+    This API uses JWT tokens for authentication. Most endpoints require a valid access token in the Authorization header.
+
+    ## Rate Limiting
+    The API implements rate limiting (100 requests per 15 minutes) to ensure fair usage.
+
+    ## Recipe Generation Limits
+    Users are limited to 5 recipe generations per day to manage API costs.
+  version: 1.0.0
+  contact:
+    name: Sherbiny Kitchen API Support
+    email: support@sherbinykitchen.com
+  license:
+    name: ISC
+    url: https://opensource.org/licenses/ISC
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://api.sherbinykitchen.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization endpoints
+  - name: Recipes
+    description: Recipe generation, management, and retrieval
+  - name: Ingredients
+    description: Ingredient management and retrieval
+  - name: Health
+    description: API health and status endpoints
+
+paths:
+  /status:
+    get:
+      tags:
+        - Health
+      summary: Check API status
+      description: Returns the current status of the API
+      responses:
+        "200":
+          description: API is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+              example:
+                ok: true
+
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: |
+        Register a new user account. An email verification token will be sent to the provided email address.
+        The user must verify their email before they can access protected endpoints.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegistration"
+            example:
+              name: "John Doe"
+              email: "john.doe@example.com"
+              password: "securePassword123"
+              confirmPassword: "securePassword123"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userData:
+                    $ref: "#/components/schemas/User"
+              example:
+                userData:
+                  id: "123e4567-e89b-12d3-a456-426614174000"
+                  name: "John Doe"
+                  email: "john.doe@example.com"
+                  verified: false
+                  createdAt: "2024-01-01T00:00:00.000Z"
+                  updatedAt: "2024-01-01T00:00:00.000Z"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 997
+                error: "Passwords don't match"
+        "403":
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 1002
+                error: "Email or phone number already used."
+
+  /api/v1/auth/verify-email:
+    post:
+      tags:
+        - Authentication
+      summary: Verify email address
+      description: Verify user's email address using the token sent during registration
+      parameters:
+        - name: token
+          in: query
+          required: true
+          description: Email verification token
+          schema:
+            type: string
+          example: "abc123def456ghi789"
+      responses:
+        "200":
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Email verified successfully!"
+        "400":
+          description: Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 1015
+                error: "Invalid or expired token."
+
+  /api/v1/auth/new-email-token:
+    post:
+      tags:
+        - Authentication
+      summary: Generate new email verification token
+      description: Generate a new email verification token for unverified users
+      parameters:
+        - name: email
+          in: query
+          required: true
+          description: User's email address
+          schema:
+            type: string
+            format: email
+          example: "john.doe@example.com"
+      responses:
+        "200":
+          description: New verification token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "New verification token generated successfully!"
+        "400":
+          description: User not found or already verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 988
+                error: "User not found"
+
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return access and refresh tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLogin"
+            example:
+              email: "john.doe@example.com"
+              password: "securePassword123"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              example:
+                validUser: true
+                accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                accessTokenExpiresIn: "15m"
+                refreshTokenExpiresIn: "7d"
+          headers:
+            Set-Cookie:
+              description: HTTP-only refresh token cookie
+              schema:
+                type: string
+                example: "refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Path=/"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 1000
+                error: "Invalid email, phone number or password."
+
+  /api/v1/auth/logout:
+    get:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Logout user and clear refresh token cookie
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "User logged out successfully"
+          headers:
+            Set-Cookie:
+              description: Clear refresh token cookie
+              schema:
+                type: string
+                example: "refreshToken=; HttpOnly; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"
+
+  /api/v1/auth/forget-password:
+    post:
+      tags:
+        - Authentication
+      summary: Request password reset
+      description: Send password reset email to user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgetPassword"
+            example:
+              email: "john.doe@example.com"
+      responses:
+        "200":
+          description: Password reset email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Password reset link has been sent to your email"
+        "400":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 998
+                error: "User not found"
+
+  /api/v1/auth/reset-password:
+    post:
+      tags:
+        - Authentication
+      summary: Reset password
+      description: Reset user password using token from email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPassword"
+            example:
+              email: "john.doe@example.com"
+              passwordToken: "abc123def456ghi789"
+              newPassword: "newSecurePassword123"
+      responses:
+        "200":
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Password has been updated successfully"
+        "400":
+          description: Invalid token or email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 998
+                error: "Invalid Email or Token"
+
+  /api/v1/auth/token:
+    post:
+      tags:
+        - Authentication
+      summary: Generate new access token
+      description: Generate a new access token using refresh token
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: New access token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "New access token has been generated"
+          headers:
+            x-access-token:
+              description: New access token
+              schema:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "400":
+          description: Missing tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 998
+                error: "Access token is not provided"
+        "403":
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 1015
+                error: "Invalid refresh token"
+
+  /api/v1/recipe/generate:
+    post:
+      tags:
+        - Recipes
+      summary: Generate AI recipe
+      description: |
+        Generate a new recipe using AI based on provided ingredients and preferences.
+        Limited to 5 generations per day per user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateRecipe"
+            example:
+              ingredients:
+                - name: "chicken"
+                  quantity: 500
+                  measure: "GRAM"
+                - name: "rice"
+                  quantity: 2
+                  measure: "CUP"
+              options:
+                - "spicy"
+                - "quick"
+              country: "Indian"
+              dishType: "MAIN"
+      responses:
+        "200":
+          description: Recipe generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  finalResult:
+                    $ref: "#/components/schemas/Recipe"
+                  recipeKey:
+                    type: string
+                    description: Unique identifier for the generated recipe
+                  todayAttemps:
+                    type: integer
+                    description: Number of attempts used today
+                  remainingAttemps:
+                    type: integer
+                    description: Number of attempts remaining today
+              example:
+                finalResult:
+                  recipeName: "Spicy Chicken Biryani"
+                  timeInMinutes: 45
+                  steps:
+                    - "Marinate chicken with spices"
+                    - "Cook rice separately"
+                    - "Layer rice and chicken"
+                  ingredients:
+                    - name: "chicken"
+                      quantity: 500
+                      measure: "GRAM"
+                    - name: "rice"
+                      quantity: 2
+                      measure: "CUP"
+                  country: "Indian"
+                recipeKey: "spicy-chicken-biryani"
+                todayAttemps: 1
+                remainingAttemps: 4
+        "403":
+          description: Maximum attempts reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 1018
+                error: "You have reached the maximum number of attempts. Please try again later."
+
+  /api/v1/recipe/save/{recipeKey}:
+    post:
+      tags:
+        - Recipes
+      summary: Save recipe to user's collection
+      description: Save a generated recipe to the user's personal recipe collection
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: recipeKey
+          in: path
+          required: true
+          description: Unique identifier of the recipe to save
+          schema:
+            type: string
+          example: "spicy-chicken-biryani"
+      responses:
+        "200":
+          description: Recipe saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Recipe ( Spicy Chicken Biryani ) has been saved successfully!"
+        "400":
+          description: Recipe already saved or not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 1002
+                error: "This Recipe has been saved before"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 1001
+                error: "Invalid token."
+
+  /api/v1/recipe/{recipeKey}:
+    get:
+      tags:
+        - Recipes
+      summary: Get recipe details
+      description: Retrieve recipe details by recipe key (from cache or database)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: recipeKey
+          in: path
+          required: true
+          description: Unique identifier of the recipe
+          schema:
+            type: string
+          example: "spicy-chicken-biryani"
+      responses:
+        "200":
+          description: Recipe details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recipe"
+              example:
+                recipeName: "Spicy Chicken Biryani"
+                timeInMinutes: 45
+                steps:
+                  - "Marinate chicken with spices"
+                  - "Cook rice separately"
+                  - "Layer rice and chicken"
+                ingredients:
+                  - name: "chicken"
+                    quantity: 500
+                    measure: "GRAM"
+                  - name: "rice"
+                    quantity: 2
+                    measure: "CUP"
+                country: "Indian"
+        "400":
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 988
+                error: "Recipe not found in the cache"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 1001
+                error: "Invalid token."
+
+  /api/v1/recipe:
+    get:
+      tags:
+        - Recipes
+      summary: Get all user recipes
+      description: Retrieve all recipes saved by the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User recipes retrieved successfully
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      count:
+                        type: integer
+                        description: Number of recipes
+                      recipes:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Recipe"
+                  - type: object
+                    properties:
+                      nessage:
+                        type: string
+                        description: Message when no recipes found
+              examples:
+                withRecipes:
+                  summary: User has recipes
+                  value:
+                    count: 2
+                    recipes:
+                      - recipeName: "Spicy Chicken Biryani"
+                        timeInMinutes: 45
+                        steps:
+                          - "Marinate chicken with spices"
+                          - "Cook rice separately"
+                        ingredients:
+                          - name: "chicken"
+                            quantity: 500
+                            measure: "GRAM"
+                        country: "Indian"
+                      - recipeName: "Chocolate Cake"
+                        timeInMinutes: 60
+                        steps:
+                          - "Mix dry ingredients"
+                          - "Add wet ingredients"
+                        ingredients:
+                          - name: "flour"
+                            quantity: 2
+                            measure: "CUP"
+                        country: "American"
+                noRecipes:
+                  summary: No recipes found
+                  value:
+                    nessage: "No recipes found for this user"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                errorCode: 1001
+                error: "Invalid token."
+
+  /api/v1/ingredient:
+    get:
+      tags:
+        - Ingredients
+      summary: Get all ingredients
+      description: Retrieve all available ingredients in the system
+      responses:
+        "200":
+          description: Ingredients retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: Number of ingredients
+                  ingredients:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Ingredient"
+              example:
+                count: 3
+                ingredients:
+                  - slug: "chicken"
+                    name: "Chicken"
+                  - slug: "rice"
+                    name: "Rice"
+                  - slug: "tomato"
+                    name: "Tomato"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token for authentication
+
+  schemas:
+    UserRegistration:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - confirmPassword
+      properties:
+        name:
+          type: string
+          description: User's full name
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        password:
+          type: string
+          description: User's password
+          minLength: 6
+          example: "securePassword123"
+        confirmPassword:
+          type: string
+          description: Password confirmation
+          example: "securePassword123"
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        password:
+          type: string
+          description: User's password
+          example: "securePassword123"
+
+    LoginResponse:
+      type: object
+      properties:
+        validUser:
+          type: boolean
+          description: Whether the user is valid
+        accessToken:
+          type: string
+          description: JWT access token
+        refreshToken:
+          type: string
+          description: JWT refresh token
+        accessTokenExpiresIn:
+          type: string
+          description: Access token expiration time
+        refreshTokenExpiresIn:
+          type: string
+          description: Refresh token expiration time
+
+    ForgetPassword:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+
+    ResetPassword:
+      type: object
+      required:
+        - email
+        - passwordToken
+        - newPassword
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        passwordToken:
+          type: string
+          description: Password reset token from email
+          example: "abc123def456ghi789"
+        newPassword:
+          type: string
+          description: New password
+          minLength: 6
+          example: "newSecurePassword123"
+
+    GenerateRecipe:
+      type: object
+      required:
+        - ingredients
+        - options
+        - country
+        - dishType
+      properties:
+        ingredients:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeIngredient"
+          description: List of ingredients to use in the recipe
+        options:
+          type: array
+          items:
+            type: string
+          description: Additional preferences or options
+          example: ["spicy", "quick", "vegetarian"]
+        country:
+          type: string
+          description: Cuisine country of origin
+          example: "Indian"
+        dishType:
+          type: string
+          enum: [MAIN, DESSERT, APPETIZER, SNACK]
+          description: Type of dish to generate
+          example: "MAIN"
+
+    RecipeIngredient:
+      type: object
+      required:
+        - name
+        - quantity
+        - measure
+      properties:
+        name:
+          type: string
+          description: Name of the ingredient
+          example: "chicken"
+        quantity:
+          type: number
+          minimum: 0
+          description: Quantity of the ingredient
+          example: 500
+        measure:
+          type: string
+          enum: [PIECE, PACKET, GRAM, KILOGRAM, SPOON, CUP]
+          description: Unit of measurement
+          example: "GRAM"
+
+    Recipe:
+      type: object
+      required:
+        - recipeName
+        - timeInMinutes
+        - steps
+        - ingredients
+        - country
+      properties:
+        recipeName:
+          type: string
+          description: Name of the recipe
+          example: "Spicy Chicken Biryani"
+        timeInMinutes:
+          type: integer
+          minimum: 1
+          description: Cooking time in minutes
+          example: 45
+        steps:
+          type: array
+          items:
+            type: string
+          description: Step-by-step cooking instructions
+          example:
+            - "Marinate chicken with spices"
+            - "Cook rice separately"
+            - "Layer rice and chicken"
+        ingredients:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeIngredient"
+          description: List of ingredients required
+        country:
+          type: string
+          description: Cuisine country of origin
+          example: "Indian"
+
+    Ingredient:
+      type: object
+      properties:
+        slug:
+          type: string
+          description: Unique identifier for the ingredient
+          example: "chicken"
+        name:
+          type: string
+          description: Display name of the ingredient
+          example: "Chicken"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          description: User's full name
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        verified:
+          type: boolean
+          description: Whether the user's email is verified
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          description: User creation timestamp
+          example: "2024-01-01T00:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: User last update timestamp
+          example: "2024-01-01T00:00:00.000Z"
+
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          description: Numeric error code
+          example: 1000
+        error:
+          type: string
+          description: Human-readable error message
+          example: "Invalid email, phone number or password."
+
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            errorCode: 1001
+            error: "Invalid token."
+
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            errorCode: 997
+            error: "Validation failed"
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            errorCode: 998
+            error: "Not found"
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            errorCode: 1999
+            error: "Something went wrong"
+
+  examples:
+    UserRegistrationExample:
+      summary: User registration
+      value:
+        name: "John Doe"
+        email: "john.doe@example.com"
+        password: "securePassword123"
+        confirmPassword: "securePassword123"
+
+    GenerateRecipeExample:
+      summary: Recipe generation request
+      value:
+        ingredients:
+          - name: "chicken"
+            quantity: 500
+            measure: "GRAM"
+          - name: "rice"
+            quantity: 2
+            measure: "CUP"
+        options:
+          - "spicy"
+          - "quick"
+        country: "Indian"
+        dishType: "MAIN"
+
+security:
+  - BearerAuth: []

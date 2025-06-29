@@ -8,6 +8,8 @@ const startServer = async () => {
     try {
         server.listen(port, () => {
             console.log(`API runs on port ${port}`)
+            console.log(`📜 Swagger Docs available at http://localhost:${port}/api-docs`);
+
         })
     } catch (err) {
         console.error(err);

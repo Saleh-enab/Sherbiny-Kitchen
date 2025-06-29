@@ -9,6 +9,9 @@ import { authRouter } from "./modules/auth/auth.route.js";
 import cookieParser from 'cookie-parser';
 import { recipeRouter } from "./modules/recipe/recipe.route.js";
 import { ingredientRouter } from "./modules/ingredient/ingredient.route.js";
+import path from 'path';
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
 
 export const createServer = (): Express => {
     const app = express();
@@ -19,6 +22,9 @@ export const createServer = (): Express => {
         standardHeaders: 'draft-8',
         legacyHeaders: false,
     })
+
+    const swaggerDocument = YAML.load(path.join(import.meta.dirname, "../swagger.yaml"));
+    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
     const setUpExpressApp = () => {
         app
