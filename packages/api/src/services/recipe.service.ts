@@ -28,15 +28,6 @@ export const storeRecipe = async (tx: Prisma.TransactionClient, recipeData: IRec
         const ingredientSlug = slugify
             .default(ingredient.name.toLowerCase(), { lower: true, replacement: '-', trim: true });
 
-        // Ensure ingredient exists in database
-        await tx.ingredient.upsert({
-            where: { slug: ingredientSlug },
-            update: {},
-            create: {
-                slug: ingredientSlug,
-                name: ingredient.name
-            }
-        });
 
         await tx.recipeToIngredient.create({
             data: {
