@@ -13,11 +13,11 @@ export const storeRecipe = async (tx: Prisma.TransactionClient, recipeData: IRec
     const recipeSteps = recipeData.steps;
     const recipeTime = recipeData.timeInMinutes;
 
-    const newRecipe = await db.recipe.create({
+    const newRecipe = await tx.recipe.create({
         data: {
             slug: recipeSlug,
             name: recipeName,
-            countery: recipeCountry,
+            country: recipeCountry,
             userId,
             steps: recipeSteps,
             timeInMinutes: recipeTime
@@ -28,7 +28,17 @@ export const storeRecipe = async (tx: Prisma.TransactionClient, recipeData: IRec
         const ingredientSlug = slugify
             .default(ingredient.name.toLowerCase(), { lower: true, replacement: '-', trim: true });
 
-        await db.recipeToIngredient.create({
+        // Ensure ingredient exists in database
+        await tx.ingredient.upsert({
+            where: { slug: ingredientSlug },
+            update: {},
+            create: {
+                slug: ingredientSlug,
+                name: ingredient.name
+            }
+        });
+
+        await tx.recipeToIngredient.create({
             data: {
                 recipeSlug,
                 ingredientSlug,
