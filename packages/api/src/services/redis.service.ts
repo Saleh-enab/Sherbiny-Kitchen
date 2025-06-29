@@ -3,7 +3,7 @@ import AppError from "../models/appError.js";
 import { IRecipe } from "../types/recipeType.js";
 import { logger } from "../utils/logger.js";
 
-export const setRecipe = async (key: string, data: IRecipe) => {
+export const setRecipe = async (key: string, data: IRecipe, userId: string) => {
     const oldRecipes = await redis.get(key);
 
     if (oldRecipes) {
@@ -13,7 +13,8 @@ export const setRecipe = async (key: string, data: IRecipe) => {
 
     const requestPayload = {
         recipe: data,
-        requestedAt: new Date().toISOString()
+        requestedAt: new Date().toISOString(),
+        userId
     };
 
     const recipeJson = JSON.stringify(requestPayload);
@@ -39,12 +40,11 @@ export const getRecipe = async (key: string) => {
     return cachedRecipe;
 }
 
-export const getTodayCachedRecipeCount = async () => {
+export const getTodayCachedRecipeCount = async (userId: string) => {
     const keys = await redis.keys("*");
 
     if (!keys || keys.length === 0) {
         console.log("No Keys");
-
         return 0;
     }
 
@@ -54,9 +54,9 @@ export const getTodayCachedRecipeCount = async () => {
         const value = await redis.get(key);
 
         if (value) {
-            const { requestedAt } = JSON.parse(value);
+            const { requestedAt, userId: cachedUserId } = JSON.parse(value);
 
-            if (isToday(requestedAt)) {
+            if (cachedUserId === userId && isToday(requestedAt)) {
                 count++;
             }
         }
@@ -64,6 +64,7 @@ export const getTodayCachedRecipeCount = async () => {
 
     return count;
 };
+
 
 // Check if ISO string date is from today
 const isToday = (isoString: string) => {
