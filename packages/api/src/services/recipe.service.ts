@@ -6,8 +6,8 @@ import { Prisma } from "../generated/prisma/client.js";
 export const storeRecipe = async (tx: Prisma.TransactionClient, recipeData: IRecipe, userId: string) => {
 
     const recipeSlug = slugify
-        .default(recipeData.recipeName.toLowerCase(), { lower: true, replacement: '-', trim: true });
-    const recipeName = recipeData.recipeName;
+        .default(recipeData.name.toLowerCase(), { lower: true, replacement: '-', trim: true });
+    const recipeName = recipeData.name;
     const recipeCountry = recipeData.country;
     const recipeIngredients = recipeData.ingredients;
     const recipeSteps = recipeData.steps;
