@@ -7,6 +7,7 @@ import Register from './pages/Register'
 import RecipeGenerator from './pages/RecipeGenerator'
 import MyRecipes from './pages/MyRecipes'
 import ProtectedRoute from './components/ProtectedRoute'
+import RecipeDetails from './pages/RecipeDetails'
 
 function App() {
     return (
@@ -32,6 +33,7 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
+                    <Route path="/recipes/:recipeKey" element={<RecipeDetails />} />
                 </Routes>
             </Layout>
         </AuthProvider>

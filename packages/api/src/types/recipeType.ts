@@ -7,7 +7,7 @@ export interface RecipeIngredient {
 }
 
 export interface IRecipe {
-    recipeName: string,
+    name: string,
     timeInMinutes: number,
     steps: string[],
     ingredients: RecipeIngredient[],

@@ -51,7 +51,7 @@ export interface RecipeIngredientInput {
 
 // Generated recipe (from AI before saving)
 export interface GeneratedRecipe {
-    recipeName: string
+    name: string
     timeInMinutes: number
     steps: string[]
     ingredients: RecipeIngredientInput[]

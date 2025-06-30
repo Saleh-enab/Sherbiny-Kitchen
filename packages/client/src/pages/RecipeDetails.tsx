@@ -11,7 +11,7 @@ const RecipeDetails = () => {
     const [recipe, setRecipe] = useState<StoredRecipe | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [isSaved, setIsSaved] = useState(false); // Optionally connect to backend later
+    const [isSaved, setIsSaved] = useState(false); // Optional future feature
 
     useEffect(() => {
         const fetchRecipe = async () => {
@@ -19,13 +19,22 @@ const RecipeDetails = () => {
 
             try {
                 const recipeData = await recipeAPI.getRecipe(recipeKey);
+
                 if (!recipeData || !recipeData.name || !Array.isArray(recipeData.steps)) {
+                    console.log(recipeData);
+                    console.log(recipeData.name);
+                    console.log(Array.isArray(recipeData.steps));
+
+
+
                     throw new Error('Invalid recipe data');
                 }
 
                 setRecipe(recipeData);
-                setIsSaved(false); // You can check saved status via API later
+                setIsSaved(false);
             } catch (error) {
+                console.log(error);
+
                 toast.error('Failed to load recipe');
                 navigate('/my-recipes');
             } finally {
@@ -64,10 +73,7 @@ const RecipeDetails = () => {
             <div className="text-center space-y-6">
                 <h2 className="text-2xl font-bold text-gray-900">Recipe not found</h2>
                 <p className="text-gray-600">The recipe you're looking for doesn't exist.</p>
-                <button
-                    onClick={() => navigate('/my-recipes')}
-                    className="btn-primary"
-                >
+                <button onClick={() => navigate('/my-recipes')} className="btn-primary">
                     Back to My Recipes
                 </button>
             </div>

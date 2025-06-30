@@ -124,9 +124,29 @@ const RecipeGenerator = () => {
     ]
 
     const cuisineOptions = [
-        'Italian', 'Mexican', 'Chinese', 'Indian', 'Japanese', 'Thai', 'French', 'Mediterranean',
-        'American', 'Greek', 'Spanish', 'Korean', 'Vietnamese', 'Lebanese', 'Turkish', 'Moroccan'
-    ]
+        'Afghan', 'Albanian', 'Algerian', 'American', 'Angolan', 'Argentinian', 'Armenian',
+        'Australian', 'Austrian', 'Azerbaijani', 'Bahamanian', 'Bahamian', 'Bahraini', 'Bangladeshi',
+        'Barbadian', 'Belarusian', 'Belgian', 'Beninese', 'Bhutanese', 'Bolivian', 'Bosnian',
+        'Botswanan', 'Brazilian', 'Bruneian', 'Bulgarian', 'Burkinabé', 'Burundian', 'Cambodian',
+        'Cameroonian', 'Canadian', 'Chadian', 'Chilean', 'Chinese', 'Colombian', 'Congolese',
+        'Costa Rican', 'Croatian', 'Cuban', 'Cypriot', 'Czech', 'Danish', 'Dominican', 'Dutch',
+        'Ecuadorian', 'Egyptian', 'El Salvadoran', 'Emirati', 'English', 'Ethiopian', 'Fijian',
+        'Filipino', 'Finnish', 'French', 'Georgian', 'German', 'Ghanaian', 'Greek', 'Guatemalan',
+        'Guinean', 'Haitian', 'Honduran', 'Hungarian', 'Icelandic', 'Indian', 'Indonesian', 'Iranian',
+        'Iraqi', 'Irish', 'Israeli', 'Italian', 'Ivorian', 'Jamaican', 'Japanese', 'Jordanian',
+        'Kazakh', 'Kenyan', 'Korean', 'Kuwaiti', 'Kyrgyz', 'Laotian', 'Lebanese', 'Liberian',
+        'Libyan', 'Macedonian', 'Malawian', 'Malaysian', 'Maldivian', 'Malian', 'Maltese',
+        'Mauritanian', 'Mexican', 'Middle Eastern', 'Mongolian', 'Montenegrin', 'Moroccan',
+        'Mozambican', 'Myanmar (Burmese)', 'Namibian', 'Nepalese', 'New Zealand', 'Nicaraguan',
+        'Nigerian', 'Nigerien', 'Norwegian', 'Omani', 'Pakistani', 'Palestinian', 'Panamanian',
+        'Papua New Guinean', 'Paraguayan', 'Peruvian', 'Philippine', 'Polish', 'Portuguese',
+        'Puerto Rican', 'Qatari', 'Romanian', 'Russian', 'Rwandan', 'Samoan', 'Saudi Arabian',
+        'Scottish', 'Senegalese', 'Serbian', 'Sierra Leonean', 'Singaporean', 'Slovak', 'Slovenian',
+        'Somali', 'South African', 'South Sudanese', 'Spanish', 'Sri Lankan', 'Swedish', 'Swiss',
+        'Syrian', 'Taiwanese', 'Tajik', 'Tanzanian', 'Thai', 'Tibetan', 'Togolese', 'Trinidadian',
+        'Tunisian', 'Turkish', 'Turkmen', 'U.S. American', 'Ukrainian', 'Uruguayan', 'Uzbek',
+        'Venezuelan', 'Vietnamese', 'Welsh', 'Yemeni', 'Zambian', 'Zimbabwean', 'Rnadom'
+    ];
 
     const preferenceOptions = [
         'spicy', 'quick', 'vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'low-carb', 'high-protein'
@@ -303,7 +323,7 @@ const RecipeGenerator = () => {
                 <div className="card space-y-6">
                     {/* Recipe Header */}
                     <div className="text-center">
-                        <h2 className="text-2xl font-bold text-gray-900">{generatedRecipe.recipeName}</h2>
+                        <h2 className="text-2xl font-bold text-gray-900">{generatedRecipe.name}</h2>
                         <div className="flex justify-center items-center space-x-6 mt-4 text-gray-600">
                             <div className="flex items-center space-x-2">
                                 <Clock className="h-5 w-5" />
